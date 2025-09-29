@@ -1,0 +1,18 @@
+# Directories
+results/
+scripts/dataset/
+.vscode/
+.idea/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Model files
+*.pth
+*.pt
+
+# OS files
+.DS_Store
+Thumbs.db
