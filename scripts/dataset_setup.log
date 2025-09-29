@@ -1,27 +1,170 @@
-2025-09-29 13:04:05,961 - INFO - === Celebrity Identity Dataset Setup ===
-2025-09-29 13:04:05,962 - ERROR - Dataset zip not found: ./dataset/celeba-dataset.zip
-2025-09-29 13:13:59,320 - INFO - === Celebrity Identity Dataset Setup ===
-2025-09-29 13:13:59,327 - INFO - Loading identity file: ./dataset/identity_CelebA.txt
-2025-09-29 13:13:59,438 - INFO - Loaded 202599 image-celebrity mappings
-2025-09-29 13:13:59,442 - INFO - Number of unique celebrities: 10177
-2025-09-29 13:13:59,443 - INFO - Celebrity ID range: 1 to 10177
-2025-09-29 13:13:59,443 - INFO - Sampling 100 images from 202599 total
-2025-09-29 13:13:59,456 - INFO - Subset statistics:
-2025-09-29 13:13:59,456 - INFO -   Total images: 100
-2025-09-29 13:13:59,456 - INFO -   Unique celebrities: 99
-2025-09-29 13:13:59,458 - INFO -   Images per celebrity - Min: 1, Max: 2, Mean: 1.0
-2025-09-29 13:13:59,467 - INFO - Extracting 100 images...
-2025-09-29 13:14:03,007 - INFO - ✓ Extracted 100 images to ./dataset/celeba-100/img_align_celeba
-2025-09-29 13:14:03,070 - INFO - Data split - Train: 80, Val: 20
-2025-09-29 13:14:03,092 - INFO - ✓ Identity files saved to: ./dataset/celeba-100
-2025-09-29 13:14:03,092 - INFO - ============================================================
-2025-09-29 13:14:03,093 - INFO - DATASET READY FOR TRAINING!
-2025-09-29 13:14:03,094 - INFO - ✓ Dataset location: ./dataset/celeba-100
-2025-09-29 13:14:03,096 - INFO - ✓ Total images: 100
-2025-09-29 13:14:03,097 - INFO - ✓ Celebrities: 99
-2025-09-29 13:14:03,098 - INFO - ✓ Train images: 80
-2025-09-29 13:14:03,099 - INFO - ✓ Val images: 20
-2025-09-29 13:14:03,100 - INFO - 
-Next step: Train the model
-2025-09-29 13:14:03,101 - INFO -   python src/training/trainer.py
-2025-09-29 13:14:03,102 - INFO - ============================================================
+2025-09-29 14:03:11,300 - INFO -   python src/training/trainer.py
+2025-09-29 14:03:11,301 - INFO - ============================================================
+2025-09-29 14:11:40,485 - INFO - === Balanced Celebrity Dataset Extraction ===
+2025-09-29 14:11:40,485 - INFO - Loading identity file: ./dataset/identity_CelebA.txt
+2025-09-29 14:11:40,606 - INFO - Loaded 202599 image-celebrity mappings
+2025-09-29 14:11:40,610 - INFO - Unique celebrities: 10177
+2025-09-29 14:11:40,614 - INFO - Creating balanced celebrity dataset...
+2025-09-29 14:11:40,616 - INFO -   Min images per celebrity: 30
+2025-09-29 14:11:40,620 - INFO -   Max images per celebrity: 50
+2025-09-29 14:11:40,622 - INFO -   Target total images: 10000
+2025-09-29 14:11:40,629 - INFO - Celebrities with ≥30 images: 2360
+2025-09-29 14:11:40,629 - INFO - Too many valid celebrities (2360), selecting top 333 with most images
+2025-09-29 14:11:40,629 - INFO - Selected 333 celebrities for balanced dataset
+2025-09-29 14:11:40,790 - INFO - Dataset has 10028 images, sampling down to 10000
+2025-09-29 14:11:41,081 - INFO - Balanced dataset created:
+2025-09-29 14:11:41,081 - INFO -   Total images: 9990
+2025-09-29 14:11:41,084 - INFO -   Total celebrities: 333
+2025-09-29 14:11:41,087 - INFO -   Images per celebrity - Min: 30, Max: 30, Mean: 30.0
+2025-09-29 14:11:41,088 - INFO -   Expected train images per celebrity: ~24.0
+2025-09-29 14:11:41,090 - INFO -   Expected val images per celebrity: ~6.0
+2025-09-29 14:11:41,109 - INFO - Extracting 9990 images...
+2025-09-29 14:11:51,984 - INFO -   Extracted 1000/9990 images...
+2025-09-29 14:12:01,598 - INFO -   Extracted 2000/9990 images...
+2025-09-29 14:12:08,749 - INFO -   Extracted 3000/9990 images...
+2025-09-29 14:12:16,417 - INFO -   Extracted 4000/9990 images...
+2025-09-29 14:12:23,504 - INFO -   Extracted 5000/9990 images...
+2025-09-29 14:12:29,863 - INFO -   Extracted 6000/9990 images...
+2025-09-29 14:12:37,202 - INFO -   Extracted 7000/9990 images...
+2025-09-29 14:12:42,828 - INFO -   Extracted 8000/9990 images...
+2025-09-29 14:12:50,940 - INFO -   Extracted 9000/9990 images...
+2025-09-29 14:12:58,055 - INFO - ✓ Extracted 9990 images
+2025-09-29 14:12:58,142 - INFO - Train/Val split - Train: 7992, Val: 1998
+2025-09-29 14:12:58,209 - INFO - ✓ Identity files saved
+2025-09-29 14:12:58,209 - INFO - ============================================================
+2025-09-29 14:12:58,210 - INFO - BALANCED DATASET READY!
+2025-09-29 14:12:58,211 - INFO - ✓ Location: ./dataset/celeba-9990-balanced
+2025-09-29 14:12:58,213 - INFO - ✓ Total images: 9990
+2025-09-29 14:12:58,215 - INFO - ✓ Celebrities: 333
+2025-09-29 14:12:58,216 - INFO - ✓ Train: 7992, Val: 1998
+2025-09-29 14:12:58,218 - INFO - ✓ Balanced classes for better learning
+2025-09-29 14:12:58,219 - INFO - 
+Next: Train the model
+2025-09-29 14:12:58,220 - INFO -   python src/training/trainer.py
+2025-09-29 14:12:58,221 - INFO - ============================================================
+2025-09-29 14:16:53,266 - INFO - === Balanced Celebrity Dataset Extraction ===
+2025-09-29 14:16:53,266 - INFO - Loading identity file: ./dataset/identity_CelebA.txt
+2025-09-29 14:16:53,378 - INFO - Loaded 202599 image-celebrity mappings
+2025-09-29 14:16:53,382 - INFO - Unique celebrities: 10177
+2025-09-29 14:16:53,388 - INFO - Creating balanced celebrity dataset...
+2025-09-29 14:16:53,391 - INFO -   Min images per celebrity: 30
+2025-09-29 14:16:53,396 - INFO -   Max images per celebrity: 50
+2025-09-29 14:16:53,398 - INFO -   Target total images: 10000
+2025-09-29 14:16:53,405 - INFO - Celebrities with ≥30 images: 2360
+2025-09-29 14:16:53,405 - INFO - Too many valid celebrities (2360), selecting top 333 with most images
+2025-09-29 14:16:53,406 - INFO - Selected 333 celebrities for balanced dataset
+2025-09-29 14:16:53,563 - INFO - Dataset has 10028 images, sampling down to 10000
+2025-09-29 14:16:53,821 - INFO - Balanced dataset created:
+2025-09-29 14:16:53,821 - INFO -   Total images: 9990
+2025-09-29 14:16:53,823 - INFO -   Total celebrities: 333
+2025-09-29 14:16:53,824 - INFO -   Images per celebrity - Min: 30, Max: 30, Mean: 30.0
+2025-09-29 14:16:53,825 - INFO -   Expected train images per celebrity: ~24.0
+2025-09-29 14:16:53,826 - INFO -   Expected val images per celebrity: ~6.0
+2025-09-29 14:16:53,836 - INFO - Extracting 9990 images...
+2025-09-29 14:17:05,271 - INFO -   Extracted 1000/9990 images...
+2025-09-29 14:17:14,566 - INFO -   Extracted 2000/9990 images...
+2025-09-29 14:17:23,150 - INFO -   Extracted 3000/9990 images...
+2025-09-29 14:17:31,599 - INFO -   Extracted 4000/9990 images...
+2025-09-29 14:17:40,244 - INFO -   Extracted 5000/9990 images...
+2025-09-29 14:17:49,140 - INFO -   Extracted 6000/9990 images...
+2025-09-29 14:17:58,904 - INFO -   Extracted 7000/9990 images...
+2025-09-29 14:18:05,995 - INFO -   Extracted 8000/9990 images...
+2025-09-29 14:18:13,033 - INFO -   Extracted 9000/9990 images...
+2025-09-29 14:18:21,307 - INFO - ✓ Extracted 9990 images
+2025-09-29 14:18:21,393 - INFO - Train/Val split - Train: 7992, Val: 1998
+2025-09-29 14:18:21,476 - INFO - ✓ Identity files saved
+2025-09-29 14:18:21,477 - INFO - ============================================================
+2025-09-29 14:18:21,497 - INFO - BALANCED DATASET READY!
+2025-09-29 14:18:21,505 - INFO - ✓ Location: ./dataset/celeba-9990-balanced
+2025-09-29 14:18:21,507 - INFO - ✓ Total images: 9990
+2025-09-29 14:18:21,509 - INFO - ✓ Celebrities: 333
+2025-09-29 14:18:21,512 - INFO - ✓ Train: 7992, Val: 1998
+2025-09-29 14:18:21,517 - INFO - ✓ Balanced classes for better learning
+2025-09-29 14:18:21,522 - INFO - 
+Next: Train the model
+2025-09-29 14:18:21,523 - INFO -   python src/training/trainer.py
+2025-09-29 14:18:21,526 - INFO - ============================================================
+2025-09-29 14:22:42,026 - INFO - === Balanced Celebrity Dataset Extraction ===
+2025-09-29 14:22:42,026 - INFO - Loading identity file: ./dataset/identity_CelebA.txt
+2025-09-29 14:22:42,191 - INFO - Loaded 202599 image-celebrity mappings
+2025-09-29 14:22:42,196 - INFO - Unique celebrities: 10177
+2025-09-29 14:22:42,283 - INFO - Creating balanced celebrity dataset...
+2025-09-29 14:22:42,291 - INFO -   Min images per celebrity: 30
+2025-09-29 14:22:42,303 - INFO -   Max images per celebrity: 50
+2025-09-29 14:22:42,305 - INFO -   Target total images: 9000
+2025-09-29 14:22:42,317 - INFO - Celebrities with ≥30 images: 2360
+2025-09-29 14:22:42,317 - INFO - Too many valid celebrities (2360), selecting top 300 with most images
+2025-09-29 14:22:42,320 - INFO - Selected 300 celebrities for balanced dataset
+2025-09-29 14:22:42,466 - INFO - Dataset has 9038 images, sampling down to 9000
+2025-09-29 14:22:42,714 - INFO - Balanced dataset created:
+2025-09-29 14:22:42,715 - INFO -   Total images: 9000
+2025-09-29 14:22:42,719 - INFO -   Total celebrities: 300
+2025-09-29 14:22:42,721 - INFO -   Images per celebrity - Min: 30, Max: 30, Mean: 30.0
+2025-09-29 14:22:42,722 - INFO -   Expected train images per celebrity: ~24.0
+2025-09-29 14:22:42,723 - INFO -   Expected val images per celebrity: ~6.0
+2025-09-29 14:22:42,733 - INFO - Extracting 9000 images...
+2025-09-29 14:22:53,180 - INFO -   Extracted 1000/9000 images...
+2025-09-29 14:23:01,877 - INFO -   Extracted 2000/9000 images...
+2025-09-29 14:23:10,096 - INFO -   Extracted 3000/9000 images...
+2025-09-29 14:23:18,144 - INFO -   Extracted 4000/9000 images...
+2025-09-29 14:23:26,240 - INFO -   Extracted 5000/9000 images...
+2025-09-29 14:23:33,076 - INFO -   Extracted 6000/9000 images...
+2025-09-29 14:23:41,024 - INFO -   Extracted 7000/9000 images...
+2025-09-29 14:23:48,178 - INFO -   Extracted 8000/9000 images...
+2025-09-29 14:23:55,828 - INFO -   Extracted 9000/9000 images...
+2025-09-29 14:23:55,829 - INFO - ✓ Extracted 9000 images
+2025-09-29 14:23:55,920 - INFO - Train/Val split - Train: 7200, Val: 1800
+2025-09-29 14:23:55,975 - INFO - ✓ Identity files saved
+2025-09-29 14:23:55,976 - INFO - ============================================================
+2025-09-29 14:23:55,976 - INFO - BALANCED DATASET READY!
+2025-09-29 14:23:55,977 - INFO - ✓ Location: ./dataset/celeba-9000-balanced
+2025-09-29 14:23:55,978 - INFO - ✓ Total images: 9000
+2025-09-29 14:23:55,979 - INFO - ✓ Celebrities: 300
+2025-09-29 14:23:55,981 - INFO - ✓ Train: 7200, Val: 1800
+2025-09-29 14:23:55,983 - INFO - ✓ Balanced classes for better learning
+2025-09-29 14:23:55,984 - INFO - 
+Next: Train the model
+2025-09-29 14:23:55,986 - INFO -   python src/training/trainer.py
+2025-09-29 14:23:55,991 - INFO - ============================================================
+2025-09-29 14:27:29,035 - INFO - === Balanced Celebrity Dataset Extraction ===
+2025-09-29 14:27:29,035 - INFO - Loading identity file: ./dataset/identity_CelebA.txt
+2025-09-29 14:27:29,157 - INFO - Loaded 202599 image-celebrity mappings
+2025-09-29 14:27:29,161 - INFO - Unique celebrities: 10177
+2025-09-29 14:27:29,168 - INFO - Creating balanced celebrity dataset...
+2025-09-29 14:27:29,186 - INFO -   Min images per celebrity: 30
+2025-09-29 14:27:29,192 - INFO -   Max images per celebrity: 50
+2025-09-29 14:27:29,194 - INFO -   Target total images: 9000
+2025-09-29 14:27:29,201 - INFO - Celebrities with ≥30 images: 2360
+2025-09-29 14:27:29,201 - INFO - Selecting top 300 celebrities with most images
+2025-09-29 14:27:29,203 - INFO - Selected 300 celebrities for balanced dataset
+2025-09-29 14:27:29,344 - INFO - Sampling down to 9000 images
+2025-09-29 14:27:29,584 - INFO - Balanced dataset created:
+2025-09-29 14:27:29,584 - INFO -   Total images: 9000
+2025-09-29 14:27:29,587 - INFO -   Celebrities: 300
+2025-09-29 14:27:29,589 - INFO -   Images/celebrity - Min: 30, Max: 30, Mean: 30.0
+2025-09-29 14:27:29,597 - INFO - Extracting 9000 images...
+2025-09-29 14:27:39,556 - INFO -   Extracted 1000/9000...
+2025-09-29 14:27:48,950 - INFO -   Extracted 2000/9000...
+2025-09-29 14:27:56,560 - INFO -   Extracted 3000/9000...
+2025-09-29 14:28:04,142 - INFO -   Extracted 4000/9000...
+2025-09-29 14:28:12,670 - INFO -   Extracted 5000/9000...
+2025-09-29 14:28:19,452 - INFO -   Extracted 6000/9000...
+2025-09-29 14:28:25,797 - INFO -   Extracted 7000/9000...
+2025-09-29 14:28:32,380 - INFO -   Extracted 8000/9000...
+2025-09-29 14:28:38,612 - INFO -   Extracted 9000/9000...
+2025-09-29 14:28:38,612 - INFO - ✓ Extracted 9000 images
+2025-09-29 14:28:38,700 - INFO - Creating stratified train/validation split...
+2025-09-29 14:28:38,965 - INFO - Stratified split completed:
+2025-09-29 14:28:38,965 - INFO -   Train: 7200 images, 300 celebrities
+2025-09-29 14:28:38,966 - INFO -   Train/celeb - Min: 24, Max: 24, Mean: 24.0
+2025-09-29 14:28:38,967 - INFO -   Val: 1800 images, 300 celebrities
+2025-09-29 14:28:38,968 - INFO -   Val/celeb - Min: 6, Max: 6, Mean: 6.0
+2025-09-29 14:28:39,010 - INFO - ============================================================
+2025-09-29 14:28:39,010 - INFO - BALANCED DATASET READY!
+2025-09-29 14:28:39,011 - INFO - ✓ Location: ./dataset/celeba-9000-balanced
+2025-09-29 14:28:39,013 - INFO - ✓ Images: 9000 (7200 train, 1800 val)
+2025-09-29 14:28:39,014 - INFO - ✓ Celebrities: 300
+2025-09-29 14:28:39,015 - INFO - ✓ Stratified splits for consistent validation
+2025-09-29 14:28:39,016 - INFO - 
+Train: python src/training/trainer.py
+2025-09-29 14:28:39,017 - INFO - ============================================================

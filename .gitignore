@@ -1,5 +1,6 @@
 # Directories
 results/
+results/logs/
 scripts/dataset/
 .vscode/
 .idea/
@@ -10,9 +11,12 @@ __pycache__/
 *.pyo
 
 # Model files
+*.log
 *.pth
 *.pt
 
 # OS files
 .DS_Store
 Thumbs.db
+
+result_celeba-2000_data_train.txt

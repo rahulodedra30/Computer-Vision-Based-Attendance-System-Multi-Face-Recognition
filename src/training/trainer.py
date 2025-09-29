@@ -86,7 +86,7 @@ def main():
     print("=== Week 1: Celebrity Identification CNN Training ===")
     
     # Configuration - Update to match your dataset location
-    dataset_dir = "scripts/dataset/celeba-100"  # Change based on your num_images
+    dataset_dir = "scripts/dataset/celeba-9000-balanced"  
     img_dir = os.path.join(dataset_dir, "img_align_celeba")
     train_file = os.path.join(dataset_dir, "train_identity.txt")
     val_file = os.path.join(dataset_dir, "val_identity.txt")
@@ -103,7 +103,7 @@ def main():
     if not os.path.exists(img_dir):
         print("Dataset not found!")
         print("\nTo create dataset, run:")
-        print("cd scripts && python download_data.py --data-dir ./dataset --num-images 10000")
+        print("cd scripts && python download_data.py --data-dir ./dataset --num-images")
         return
     
     if not os.path.exists(train_file) or not os.path.exists(val_file):
