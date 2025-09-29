@@ -17,7 +17,9 @@ from datetime import datetime
 
 # Add src to path
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from models.simple_cnn import create_model, count_parameters
+from models.resnet_style_cnn import create_model, count_parameters
+
+# from models.simple_cnn import create_model, count_parameters
 
 class CelebrityDataset(Dataset):
     """Dataset for real celebrity identification."""
@@ -86,15 +88,15 @@ def main():
     print("=== Week 1: Celebrity Identification CNN Training ===")
     
     # Configuration - Update to match your dataset location
-    dataset_dir = "scripts/dataset/celeba-9000-balanced"  
+    dataset_dir = "scripts/dataset/celeba-9990-balanced"  
     img_dir = os.path.join(dataset_dir, "img_align_celeba")
     train_file = os.path.join(dataset_dir, "train_identity.txt")
     val_file = os.path.join(dataset_dir, "val_identity.txt")
     
     # Training parameters
-    batch_size = 32
+    batch_size = 64
     learning_rate = 0.001
-    num_epochs = 20
+    num_epochs = 12
     
     print(f"Dataset: {dataset_dir}")
     print(f"Images: {img_dir}")
@@ -268,7 +270,7 @@ def main():
         'training_date': datetime.now().isoformat()
     }
     
-    with open('results/training_history.json', 'w') as f:
+    with open('results/training_history_2.json', 'w') as f:
         json.dump(training_history, f, indent=2)
     
     print("\n" + "="*60)

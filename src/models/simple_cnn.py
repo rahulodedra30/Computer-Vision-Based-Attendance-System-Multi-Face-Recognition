@@ -15,33 +15,58 @@ class CelebrityIdentificationCNN(nn.Module):
         
         self.num_celebrities = num_celebrities
         
-        # Convolutional layers
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
-        self.conv3 = nn.Conv2d(128, 256, kernel_size=3, padding=1)
-        self.conv4 = nn.Conv2d(256, 512, kernel_size=3, padding=1)
+        # Smaller convolutional layers
+        self.conv1 = nn.Conv2d(3, 32, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
         
         # Batch normalization
-        self.bn1 = nn.BatchNorm2d(64)
-        self.bn2 = nn.BatchNorm2d(128)
-        self.bn3 = nn.BatchNorm2d(256)
-        self.bn4 = nn.BatchNorm2d(512)
+        self.bn1 = nn.BatchNorm2d(32)
+        self.bn2 = nn.BatchNorm2d(64)
+        self.bn3 = nn.BatchNorm2d(128)
         
         # Pooling and dropout
         self.pool = nn.MaxPool2d(2, 2)
-        self.dropout = nn.Dropout(0.5)
+        self.dropout = nn.Dropout(0.4)
         
-        # Fully connected layers
-        self.fc1 = nn.Linear(512 * 14 * 14, 1024)
-        self.fc2 = nn.Linear(1024, 512)
-        self.classifier = nn.Linear(512, num_celebrities)
+        # Smaller fully connected layers
+        # After 3 pooling: 224 -> 112 -> 56 -> 28
+        self.fc1 = nn.Linear(128 * 28 * 28, 256)
+        self.fc2 = nn.Linear(256, 128)
+        self.classifier = nn.Linear(128, num_celebrities)
+
+    # def __init__(self, num_celebrities):
+    #     super(CelebrityIdentificationCNN, self).__init__()
+        
+    #     self.num_celebrities = num_celebrities
+        
+    #     # Convolutional layers
+    #     self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1)
+    #     self.conv2 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
+    #     self.conv3 = nn.Conv2d(128, 256, kernel_size=3, padding=1)
+    #     self.conv4 = nn.Conv2d(256, 512, kernel_size=3, padding=1)
+        
+    #     # Batch normalization
+    #     self.bn1 = nn.BatchNorm2d(64)
+    #     self.bn2 = nn.BatchNorm2d(128)
+    #     self.bn3 = nn.BatchNorm2d(256)
+    #     self.bn4 = nn.BatchNorm2d(512)
+        
+    #     # Pooling and dropout
+    #     self.pool = nn.MaxPool2d(2, 2)
+    #     self.dropout = nn.Dropout(0.5)
+        
+    #     # Fully connected layers
+    #     self.fc1 = nn.Linear(512 * 14 * 14, 1024)
+    #     self.fc2 = nn.Linear(1024, 512)
+    #     self.classifier = nn.Linear(512, num_celebrities)
     
     def forward(self, x):
         # Feature extraction
         x = self.pool(F.relu(self.bn1(self.conv1(x))))  # 224->112
         x = self.pool(F.relu(self.bn2(self.conv2(x))))  # 112->56  
         x = self.pool(F.relu(self.bn3(self.conv3(x))))  # 56->28
-        x = self.pool(F.relu(self.bn4(self.conv4(x))))  # 28->14
+        # x = self.pool(F.relu(self.bn4(self.conv4(x))))  # 28->14
         
         # Flatten
         x = x.view(-1, 512 * 14 * 14)
@@ -151,27 +176,3 @@ def model_summary(model, input_size=(3, 224, 224)):
     param_size = total_params * 4  # Assuming float32
     print(f"Model size: {param_size / 1024 / 1024:.2f} MB")
     print("="*70)
-
-
-if __name__ == "__main__":
-    # Test model creation
-    num_celebrities = 50  # Example: 50 different celebrities (students)
-    model = create_model(num_celebrities)
-    
-    print(f"Celebrity Identification CNN created:")
-    print(f"  - Number of celebrities: {num_celebrities}")
-    print(f"  - Total parameters: {count_parameters(model):,}")
-    
-    # Test forward pass
-    dummy_input = torch.randn(2, 3, 224, 224)  # Batch of 2 images
-    output = model(dummy_input)
-    features = model.extract_features(dummy_input)
-    
-    print(f"\nTest forward pass:")
-    print(f"  - Input shape: {dummy_input.shape}")
-    print(f"  - Output shape: {output.shape}")
-    print(f"  - Features shape: {features.shape}")
-    
-    # Show model summary
-    print("\nModel Architecture:")
-    model_summary(model)
