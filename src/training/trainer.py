@@ -1,6 +1,6 @@
 """
-Training Script
-Run from project root: python src/training/trainer.py
+Week 1: Training script using real CelebA celebrity IDs.
+No CSV processing needed - uses existing identity file directly.
 """
 
 import os
@@ -12,43 +12,54 @@ import torchvision.transforms as transforms
 from torch.utils.data import Dataset, DataLoader
 from PIL import Image
 import pandas as pd
+import json
+from datetime import datetime
 
-# Add src to path (we're in src/training/, need to go up one level to src/)
+# Add src to path
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from models.simple_cnn import create_model, count_parameters
 
-class SimpleDataset(Dataset):
-    """Simple dataset class."""
+class CelebrityDataset(Dataset):
+    """Dataset for real celebrity identification."""
     
     def __init__(self, img_dir, identity_file, transform=None):
         self.img_dir = img_dir
         self.transform = transform
         
-        print(f"Loading identity file: {identity_file}")
-        # Read identity file
-        self.data = pd.read_csv(identity_file, sep=' ', header=None, names=['filename', 'identity'])
-        print(f"Identity file loaded with {len(self.data)} entries")
+        print(f"Loading celebrity identities: {identity_file}")
+        # Read identity file (image_id, celebrity_id)
+        self.data = pd.read_csv(identity_file, sep=' ', header=None, 
+                               names=['filename', 'celebrity_id'])
+        print(f"Loaded {len(self.data)} image-celebrity mappings")
         
-        # Only keep files that actually exist
+        # Filter for existing images only
         print("Checking which images exist...")
-        existing_files = []
-        for idx, row in self.data.iterrows():
+        existing_data = []
+        for _, row in self.data.iterrows():
             img_path = os.path.join(img_dir, row['filename'])
             if os.path.exists(img_path):
-                existing_files.append(row)
+                existing_data.append(row)
         
-        self.data = pd.DataFrame(existing_files)
+        self.data = pd.DataFrame(existing_data)
         print(f"Found {len(self.data)} existing images")
         
         if len(self.data) == 0:
-            raise ValueError("No matching images found!")
+            raise ValueError("No images found!")
         
-        # Create label mapping
-        unique_ids = sorted(self.data['identity'].unique())
-        self.id_to_label = {id_val: i for i, id_val in enumerate(unique_ids)}
-        self.num_classes = len(unique_ids)
+        # Get unique celebrities and create mapping to sequential IDs
+        unique_celebs = sorted(self.data['celebrity_id'].unique())
+        self.celeb_to_idx = {celeb_id: idx for idx, celeb_id in enumerate(unique_celebs)}
+        self.num_celebrities = len(unique_celebs)
         
-        print(f"Number of unique celebrities: {self.num_classes}")
+        # Map celebrity IDs to sequential indices (0, 1, 2, ...)
+        self.data['label'] = self.data['celebrity_id'].map(self.celeb_to_idx)
+        
+        # Statistics
+        celeb_counts = self.data['celebrity_id'].value_counts()
+        print(f"Dataset statistics:")
+        print(f"  Total celebrities: {self.num_celebrities}")
+        print(f"  Celebrity ID range: {min(unique_celebs)} to {max(unique_celebs)}")
+        print(f"  Images per celebrity - Min: {celeb_counts.min()}, Max: {celeb_counts.max()}, Mean: {celeb_counts.mean():.1f}")
     
     def __len__(self):
         return len(self.data)
@@ -62,114 +73,110 @@ class SimpleDataset(Dataset):
             image = Image.open(img_path).convert('RGB')
         except Exception as e:
             print(f"Error loading {img_path}: {e}")
-            # Return a black image as fallback
             image = Image.new('RGB', (224, 224), (0, 0, 0))
         
         if self.transform:
             image = self.transform(image)
         
-        # Get label
-        label = self.id_to_label[row['identity']]
-        
+        label = int(row['label'])
         return image, label
 
-def main():
-    print("=== Simple CNN Training ===")
-    
-    img_dir = "scripts/dataset/celeba-25000/img_align_celeba"
-    identity_file = "scripts/dataset/metadata/identity_CelebA.txt"
 
-    print(f"Current working directory: {os.getcwd()}")
-    print(f"Looking for images in: {os.path.abspath(img_dir)}")
-    print(f"Looking for identity file: {os.path.abspath(identity_file)}")
+def main():
+    print("=== Week 1: Celebrity Identification CNN Training ===")
     
-    # Check paths exist
+    # Configuration - Update to match your dataset location
+    dataset_dir = "scripts/dataset/celeba-100"  # Change based on your num_images
+    img_dir = os.path.join(dataset_dir, "img_align_celeba")
+    train_file = os.path.join(dataset_dir, "train_identity.txt")
+    val_file = os.path.join(dataset_dir, "val_identity.txt")
+    
+    # Training parameters
+    batch_size = 32
+    learning_rate = 0.001
+    num_epochs = 20
+    
+    print(f"Dataset: {dataset_dir}")
+    print(f"Images: {img_dir}")
+    
+    # Check if dataset exists
     if not os.path.exists(img_dir):
-        print(f"Images directory not found!")
-        print("Available directories in scripts/dataset/:")
-        if os.path.exists("scripts/dataset/"):
-            for item in os.listdir("scripts/dataset/"):
-                item_path = os.path.join("scripts/dataset/", item)
-                if os.path.isdir(item_path):
-                    print(f"  📁 {item}")
+        print("Dataset not found!")
+        print("\nTo create dataset, run:")
+        print("cd scripts && python download_data.py --data-dir ./dataset --num-images 10000")
         return
     
-    if not os.path.exists(identity_file):
-        print(f"Identity file not found!")
-        print("Checking alternative locations...")
-        alt_locations = [
-            "scripts/dataset/metadata/identity_CelebA.txt",
-            "scripts/dataset/celeba-dataset.zip",  # If not extracted
-        ]
-        for alt in alt_locations:
-            if os.path.exists(alt):
-                print(f"  ✓ Found: {alt}")
-            else:
-                print(f" Not found: {alt}")
+    if not os.path.exists(train_file) or not os.path.exists(val_file):
+        print("Train/val split files not found!")
         return
-    
-    print("✅ All paths found!")
     
     # Device
-    # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    # print(f"Using device: {device}")
-
-    # To this (force CPU):
     device = torch.device('cpu')
-    print(f"Using device: {device} (forced CPU due to CUDA compatibility)")
-    
+    print(f"Using device: {device}")
     
     # Transforms
     print("\nSetting up transforms...")
-    transform = transforms.Compose([
+    train_transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.RandomRotation(degrees=10),
+        transforms.ColorJitter(brightness=0.2, contrast=0.2),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+    
+    val_transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
     
-    # Dataset
-    print("\nLoading dataset...")
+    # Create datasets
+    print("\nLoading datasets...")
     try:
-        dataset = SimpleDataset(img_dir, identity_file, transform)
+        train_dataset = CelebrityDataset(img_dir, train_file, train_transform)
+        val_dataset = CelebrityDataset(img_dir, val_file, val_transform)
+        
+        print(f"Train samples: {len(train_dataset)}")
+        print(f"Val samples: {len(val_dataset)}")
+        print(f"Number of celebrities: {train_dataset.num_celebrities}")
+        
     except Exception as e:
-        print(f"❌ Failed to load dataset: {e}")
+        print(f"Failed to load datasets: {e}")
         return
-    
-    if len(dataset) < 10:
-        print(f"⚠️  Only {len(dataset)} samples found. Need more data for training.")
-        return
-    
-    # Split dataset
-    train_size = int(0.8 * len(dataset))
-    val_size = len(dataset) - train_size
-    train_dataset, val_dataset = torch.utils.data.random_split(
-        dataset, [train_size, val_size], generator=torch.Generator().manual_seed(42)
-    )
-    
-    print(f"✅ Train samples: {len(train_dataset)}")
-    print(f"✅ Val samples: {len(val_dataset)}")
     
     # Data loaders
     print("\nCreating data loaders...")
-    train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True, num_workers=0)
-    val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False, num_workers=0)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
     
     # Model
-    print(f"\nCreating model with {dataset.num_classes} classes...")
-    model = create_model(dataset.num_classes).to(device)
-    print(f"Model parameters: {count_parameters(model):,}")
+    print(f"\nCreating CNN for {train_dataset.num_celebrities}-class classification...")
+    model = create_model(train_dataset.num_celebrities).to(device)
+    total_params = count_parameters(model)
+    print(f"Model parameters: {total_params:,}")
     
     # Training setup
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-4)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.7, patience=3)
+    
+    # Training history
+    train_losses = []
+    train_accuracies = []
+    val_losses = []
+    val_accuracies = []
     
     # Training loop
-    print("\nStarting training...")
-    num_epochs = 5
+    print(f"\nStarting training for {num_epochs} epochs...")
+    print("="*60)
+    
     best_val_acc = 0
+    os.makedirs('results', exist_ok=True)
     
     for epoch in range(num_epochs):
-        print(f"\n--- Epoch {epoch+1}/{num_epochs} ---")
+        print(f"\nEpoch {epoch+1}/{num_epochs}")
+        print("-" * 40)
         
         # Training
         model.train()
@@ -191,8 +198,9 @@ def main():
             train_total += labels.size(0)
             train_correct += predicted.eq(labels).sum().item()
             
-            if batch_idx % 5 == 0:
-                print(f'  Batch {batch_idx}: Loss {loss.item():.4f}')
+            if batch_idx % 20 == 0:
+                current_acc = 100. * train_correct / train_total
+                print(f'  Batch {batch_idx}: Loss {loss.item():.4f}, Acc {current_acc:.1f}%')
         
         # Validation
         model.eval()
@@ -211,32 +219,66 @@ def main():
                 val_total += labels.size(0)
                 val_correct += predicted.eq(labels).sum().item()
         
-        # Calculate accuracies
-        train_acc = 100. * train_correct / train_total
-        val_acc = 100. * val_correct / val_total
+        # Calculate metrics
+        epoch_train_loss = train_loss / len(train_loader)
+        epoch_train_acc = 100. * train_correct / train_total
+        epoch_val_loss = val_loss / len(val_loader)
+        epoch_val_acc = 100. * val_correct / val_total
+        
+        # Store history
+        train_losses.append(epoch_train_loss)
+        train_accuracies.append(epoch_train_acc)
+        val_losses.append(epoch_val_loss)
+        val_accuracies.append(epoch_val_acc)
         
         print(f"Results:")
-        print(f"  Train: Loss {train_loss/len(train_loader):.4f}, Acc {train_acc:.2f}%")
-        print(f"  Val:   Loss {val_loss/len(val_loader):.4f}, Acc {val_acc:.2f}%")
+        print(f"  Train: Loss {epoch_train_loss:.4f}, Acc {epoch_train_acc:.2f}%")
+        print(f"  Val:   Loss {epoch_val_loss:.4f}, Acc {epoch_val_acc:.2f}%")
+        
+        # Learning rate scheduling
+        scheduler.step(epoch_val_acc)
+        current_lr = optimizer.param_groups[0]['lr']
+        print(f"  LR: {current_lr:.6f}")
         
         # Save best model
-        if val_acc > best_val_acc:
-            best_val_acc = val_acc
-            print(f"  🎉 New best validation accuracy: {val_acc:.2f}%")
+        if epoch_val_acc > best_val_acc:
+            best_val_acc = epoch_val_acc
+            print(f"  ★ New best: {epoch_val_acc:.2f}%")
             
-            # Save model
-            os.makedirs('results', exist_ok=True)
             torch.save({
                 'model_state_dict': model.state_dict(),
-                'num_classes': dataset.num_classes,
-                'accuracy': val_acc
-            }, 'results/best_model.pth')
+                'optimizer_state_dict': optimizer.state_dict(),
+                'num_celebrities': train_dataset.num_celebrities,
+                'accuracy': epoch_val_acc,
+                'epoch': epoch,
+                'celebrity_mapping': train_dataset.celeb_to_idx
+            }, 'results/best_celebrity_model.pth')
     
-    print("\n" + "="*50)
-    print("TRAINING COMPLETED!")
+    # Save training history
+    training_history = {
+        'train_losses': train_losses,
+        'train_accuracies': train_accuracies,
+        'val_losses': val_losses,
+        'val_accuracies': val_accuracies,
+        'best_val_acc': best_val_acc,
+        'num_epochs': num_epochs,
+        'num_celebrities': train_dataset.num_celebrities,
+        'total_params': total_params,
+        'dataset_size': len(train_dataset) + len(val_dataset),
+        'training_date': datetime.now().isoformat()
+    }
+    
+    with open('results/training_history.json', 'w') as f:
+        json.dump(training_history, f, indent=2)
+    
+    print("\n" + "="*60)
+    print("WEEK 1 TRAINING COMPLETED!")
     print(f"Best validation accuracy: {best_val_acc:.2f}%")
-    print("Model saved to: results/best_model.pth")
-    print("="*50)
+    print(f"Celebrities identified: {train_dataset.num_celebrities}")
+    print(f"Model saved: results/best_celebrity_model.pth")
+    print(f"History saved: results/training_history.json")
+    print("="*60)
+
 
 if __name__ == "__main__":
     main()
