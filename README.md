@@ -2,184 +2,132 @@ Developing a Computer Vision-Based Attendance System with Multi-Face Recognition
 
 # Computer Vision-Based Attendance System - Multi-Face Recognition
 
-## Week 1: Dataset Preparation and CNN Training
+## Milestone 1: CNN for Individual Celebrity Identification
 
-### Project Goal
-Build a CNN model that can identify individual people (celebrities as proxy for students) for an automated classroom attendance system.
-
----
-
-## Dataset Journey: Finding the Right Approach
-
-### Challenge
-CelebA dataset contains 202,599 images across 10,177 celebrities with highly imbalanced distribution (average 19 images per celebrity). We needed to determine the optimal dataset structure for effective individual identification.
-
-### Approaches Explored
-
-#### 1. Random Label Generation (Failed)
-**What we tried:** When the dataset initially lacked identity files, we generated fake celebrity labels by cycling through 100 pseudo-IDs.
-
-**Results:** 
-- 10,000 images, 100 fake celebrities
-- First epoch: 0.91% train accuracy, 0.70% validation accuracy
-- Model: 26M parameters
-
-**Why we abandoned it:** Labels were meaningless. The model learned arbitrary groupings rather than actual facial features needed for real individual recognition.
+Developed a CNN-based system for automated classroom attendance using CelebA dataset (celebrities as student proxies). Goal: Build and evaluate CNN models for individual identification.
 
 ---
 
-#### 2. Attribute Classification (Considered but Rejected)
-**What we considered:** Using facial attributes (Male/Female, Young/Old) from CelebA CSV files for binary classification.
+## Dataset Evolution
 
-**Why we rejected it:** Attendance systems require individual identification, not general attribute classification. Knowing someone is "young and male" doesn't identify which specific student they are.
+### 1. Random Labels (Failed)
+- **Approach:** Generated 100 fake celebrity IDs when identity file was missing
+- **Result:** 0.91% train, 0.70% val accuracy
+- **Issue:** Meaningless labels, no real facial features learned
 
----
+### 2. Full Dataset - Imbalanced (Failed)
+- **Approach:** 10K random images from 202K dataset with real celebrity IDs
+- **Result:** 2,289 celebrities, 3.5 train images/celebrity, 1.5 val images/celebrity
+- **Issue:** Severe class imbalance, insufficient samples per class
 
-#### 3. Full Dataset with Real Identity Labels (Imbalanced)
-**What we tried:** Used actual celebrity IDs from `identity_CelebA.txt` with random image sampling.
+### 3. Balanced + Stratified (Final Solution)
+- **Approach:** Filter celebrities with ≥30 images, cap at 50 per celebrity, stratified 80/20 split
+- **Result:** 333 celebrities, 24 train images/celebrity, 6 val images/celebrity
+- **Success:** Every celebrity equally represented, reliable validation metrics
 
-**Configuration:**
-- 10,000 images randomly sampled
-- 2,289 different celebrities
-- Training: 3.5 images per celebrity (average)
-- Validation: 1.5 images per celebrity (average)
-
-**Problems:**
-- Severe class imbalance (some celebrities had 1 image, others had 9)
-- Insufficient training samples per class
-- Unreliable validation metrics (many celebrities had only 1 validation image)
-- Model would memorize rather than learn generalizable features
-
-**Why this failed:** CNNs require sufficient samples per class (20-30 minimum) to learn meaningful patterns. With only 3-4 training images per celebrity, the model cannot distinguish between noise and actual facial features.
+**Key Insight:** Quality over quantity - 300 balanced celebrities outperform 2,000+ imbalanced ones.
 
 ---
 
-#### 4. Balanced Dataset with Stratified Splitting (Final Solution)
+## Model Comparison
 
-**Strategy:**
-1. **Celebrity Filtering:** Select only celebrities with ≥30 images in the original dataset
-2. **Top Selection:** Choose top 300 celebrities by image count
-3. **Balanced Sampling:** Use exactly 30 images per celebrity
-4. **Stratified Splitting:** Split each celebrity 80/20 individually for train/validation
+### Simple CNN (Baseline)
+- **Architecture:** 4 conv layers, 2 FC layers
+- **Parameters:** 104.9M
+- **Dataset:** 1K images, 50 celebrities
+- **Accuracy:** 4.50% validation
+- **Issue:** Too large for dataset size (overfitting)
 
-**Final Configuration:**
-- 9,000 total images
-- 300 celebrities (down from 10,177)
-- Exactly 30 images per celebrity
-- Training: 7,200 images (24 per celebrity)
-- Validation: 1,800 images (6 per celebrity)
+### ResNet-Style CNN (Winner)
+- **Architecture:** 3 residual groups with skip connections, global pooling
+- **Parameters:** 742K
+- **Datasets Tested:**
+  - 5K images, 166 celebrities: 9.04% accuracy
+  - 10K images, 333 celebrities: **9.56% accuracy**
+- **Advantage:** Residual connections + right-sized model
 
-**Data Augmentation:**
-Applied during training to increase effective dataset size:
-- Random horizontal flips
-- Random rotation (±10 degrees)
-- Color jittering (brightness, contrast, saturation)
-- Effective training variations: ~96 per celebrity (24 × 4 augmentations)
+| Model | Params | Dataset | Classes | Val Acc | Params/Sample |
+|-------|--------|---------|---------|---------|---------------|
+| Simple CNN | 104.9M | 1K | 50 | 4.50% | 131,060 |
+| ResNet | 0.74M | 10K | 333 | **9.56%** | 93 |
 
-**Model Architecture:**
-- 4 convolutional layers (64, 128, 256, 512 filters)
-- Batch normalization layers
-- 2 fully connected layers (1024, 512 neurons)
-- Total parameters: ~105M
-- Task: 300-class celebrity identification
-
----
-
-## Comparison of Approaches
-
-| Approach | Celebrities | Train Imgs/Celebrity | Val Imgs/Celebrity | Key Issue |
-|----------|-------------|---------------------|-------------------|-----------|
-| Random Labels | 100 | 100 | 25 | Meaningless labels |
-| Full Dataset | 2,289 | 3.5 | 1.5 | Severe imbalance |
-| **Balanced** | **300** | **24** | **6** | **Optimal** |
-
----
-
-## Why Balanced Approach Wins
-
-**1. Sufficient Samples Per Class**
-24 training images per celebrity allows the model to learn robust facial features rather than memorizing specific photos.
-
-**2. Consistent Validation**
-Every celebrity has exactly 6 validation images, providing statistically reliable performance metrics.
-
-**3. No Class Imbalance**
-Equal representation prevents model bias toward well-represented celebrities.
-
-**4. Effective Augmentation**
-Real-time augmentation multiplies the 24 base images into ~96 effective training variations per celebrity, providing diversity without synthetic image generation.
-
-**5. Real-World Alignment**
-Mirrors actual attendance system constraints where each student would have limited enrollment photos.
-
----
-
-## Data Augmentation vs Synthetic Generation
-
-**Why we chose augmentation over GANs/synthetic images:**
-- Simple augmentations (flips, rotations, color changes) create natural variations
-- No risk of unrealistic generated images
-- Computationally efficient (applied during training)
-- Sufficient for Week 1 CNN training goals
-- Avoids unnecessary complexity
-
----
-
-## Technical Implementation
-
-### Dataset Extraction
-```bash
-python download_data.py \
-  --data-dir ./dataset \
-  --identity-file ./dataset/identity_CelebA.txt \
-  --num-images 10000 \
-  --min-per-celebrity 30 \
-  --max-per-celebrity 50
-```
-
-### Model Training
-```bash
-python src/training/trainer.py
-```
-
-### Project Structure
-```
-├── src/
-│   ├── data/          # Dataset handlers (not used in final version)
-│   ├── models/
-│   │   └── simple_cnn.py     # CNN architecture
-│   └── training/
-│       └── trainer.py        # Training with stratified data
-├── scripts/
-│   └── download_data.py      # Balanced extraction + stratified split
-└── results/
-    ├── logs/                 # Training logs
-    ├── best_celebrity_model.pth
-    └── training_history.json
-```
+**Winner:** ResNet-Style CNN - 200x fewer parameters, 2x better accuracy, 32x better than random chance.
 
 ---
 
 ## Key Learnings
 
-1. **Quality over Quantity:** 300 well-represented celebrities outperform 2,000+ poorly-represented ones
-2. **Balance Matters:** Class imbalance is one of the biggest obstacles in deep learning
-3. **Stratification Essential:** Random splits can hide poor per-class performance
-4. **Augmentation Sufficient:** Simple augmentations provide enough variety without synthetic generation
-5. **Iterative Problem-Solving:** Testing multiple approaches revealed dataset design principles
+1. **Balance > Volume:** Balanced classes beat larger imbalanced datasets
+2. **Stratified Splits Essential:** Ensures every celebrity in both train/val sets
+3. **Right-Sized Models:** Match model capacity to dataset size
+4. **Residual Connections:** Enable stable learning with limited data
+5. **Augmentation Sufficient:** No need for synthetic image generation
 
 ---
 
-## Week 1 Completion Status
+## Technical Details
 
-- Built CNN architecture for 300-class celebrity identification
-- Implemented balanced dataset extraction with celebrity filtering
-- Created stratified train/validation splits
-- Applied effective data augmentation strategy
-- Training in progress with properly balanced data
+**Final Configuration:**
+- **Dataset:** 9,990 images (7,992 train, 1,998 val)
+- **Classes:** 333 celebrities (24 train, 6 val each)
+- **Model:** ResNet-style CNN (742K parameters)
+- **Accuracy:** 9.56% validation (32x random chance)
+- **Training:** 12 epochs, Adam (lr=0.001)
 
-**Next Steps:**
-- Complete training and evaluate final accuracy
-- Compare with alternative CNN architectures or hyperparameters
-- Select one celebrity for class data sharing
-- Prepare for Week 2: Multi-face detection with YOLO
+**Project Structure:**
+```
+├── src/
+│   ├── models/
+│   │   ├── simple_cnn.py          # 105M param baseline
+│   │   └── resnet_style_cnn.py    # 742K param winner
+│   └── training/
+│       └── trainer.py              # Training with logging
+├── scripts/
+│   └── download_data.py            # Balanced extraction + stratified split
+└── results/
+    ├── logs/                       # Training logs
+    ├── best_celebrity_model.pth    # Best model weights
+    └── training_history.json       # Metrics
+```
+
+---
+
+## Usage
+
+### Extract Balanced Dataset
+```bash
+cd scripts/
+python download_data.py \
+  --data-dir ./dataset \
+  --identity-file ./dataset/identity_CelebA.txt \
+  --num-images 20000 \
+  --min-per-celebrity 30 \
+  --max-per-celebrity 50
+```
+
+### Train Model
+```bash
+# Update dataset_dir in trainer.py to match extraction
+python src/training/trainer.py
+```
+
+---
+
+## Milestone 1 Completion
+
+- Built and compared two CNN architectures
+- Evaluated multiple dataset approaches
+- Achieved 9.56% accuracy on 333-class identification
+- Selected ResNet-style CNN as final model
+- Ready for Week 2: Multi-face detection with YOLO
+
+---
+
+## Model Selection
+
+**ResNet-Style CNN selected for:**
+- Superior accuracy with 200x fewer parameters
+- Stable learning progression
+- Efficient deployment (742K params)
+- Scalable to larger student populations
+- Proven residual connection architecture
